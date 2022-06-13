@@ -21,12 +21,15 @@ class WeepaypaymentResultModuleFrontController extends ModuleFrontController
     public function initResult()
     {
 
-
         $weepay = new Weepaypayment();
         $context = Context::getContext();
         $language_iso_code = $context->language->iso_code;
         $locale = ($language_iso_code == "tr") ? "tr" : "en";
-        $cart = $context->cart;
+
+        parent::initContent();
+
+        $cart = $this->context->cart;
+
         $error_msg = '';
 
         try {
@@ -35,32 +38,25 @@ class WeepaypaymentResultModuleFrontController extends ModuleFrontController
             $paymentId = Tools::getValue('paymentId');
             $message = Tools::getValue('message');
 
-
-
-
             if ($paymentStatus == "false") {
                 throw new \Exception($message);
             }
 
-
             $cart_total = 0;
             $weepayArray = array();
             $weepayArray['Auth'] = array(
-                'bayiId' =>   Configuration::get('WEEPAY_FORM_LIVE_BAYI_ID'),
-                'apiKey' =>   Configuration::get('WEEPAY_FORM_LIVE_API_ID'),
-                'secretKey' =>   Configuration::get('WEEPAY_FORM_LIVE_SECRET'),
+                'bayiId' => Configuration::get('WEEPAY_FORM_LIVE_BAYI_ID'),
+                'apiKey' => Configuration::get('WEEPAY_FORM_LIVE_API_ID'),
+                'secretKey' => Configuration::get('WEEPAY_FORM_LIVE_SECRET'),
             );
 
             $weepayArray['Data'] = array(
-                'orderId' =>    (int)$cart->id,
+                'orderId' => (int) $cart->id,
             );
-
-
-
 
             $liveUrl = "https://api.weepay.co/GetPayment/Detail";
 
-            $response =  json_decode($this->curlPostExt(json_encode($weepayArray), $liveUrl, true), true);
+            $response = json_decode($this->curlPostExt(json_encode($weepayArray), $liveUrl, true), true);
 
             if ($response['paymentStatus'] == "SUCCESS") {
 
@@ -79,7 +75,7 @@ class WeepaypaymentResultModuleFrontController extends ModuleFrontController
             } else {
                 throw new \Exception("Payment Failure");
             }
-        } catch (\Exception $ex) {
+        } catch (\Exception$ex) {
             $error_msg = $ex->getMessage();
 
             if (empty($error_msg)) {
@@ -126,8 +122,10 @@ class WeepaypaymentResultModuleFrontController extends ModuleFrontController
         $ch = curl_init(); // initialize curl handle
         curl_setopt($ch, CURLOPT_URL, $url); // set url to post to
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return into a variable
-        if ($json)
+        if ($json) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: application/json"));
+        }
+
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30); // times out after 4s
